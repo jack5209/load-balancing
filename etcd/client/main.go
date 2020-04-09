@@ -10,6 +10,7 @@ import (
 	"go.etcd.io/etcd/clientv3"
 	"google.golang.org/grpc"
 
+	"google.golang.org/grpc/balancer/roundrobin"
 	ecpb "google.golang.org/grpc/examples/features/proto/echo"
 	"google.golang.org/grpc/resolver"
 )
@@ -27,8 +28,19 @@ func main() {
 	addr := fmt.Sprintf("%s:///%s", r.Scheme(), service)
 	conn, err := grpc.DialContext(ctx, addr,
 		grpc.WithInsecure(),
-		grpc.WithDefaultServiceConfig(`{"loadBalancingConfig": [{"round_robin":{}}]}`),
+		grpc.WithBalancerName(roundrobin.Name),
+		//指定初始化round_robin => balancer (后续可以自行定制balancer和 register、resolver 同样的方式)
+		// grpc.WithDefaultServiceConfig(`{"loadBalancingConfig": [{"round_robin":{}}]}`),
 		grpc.WithBlock())
+
+	// 这种方式也行
+	// conn, err := grpc.Dial(addr,
+	// 	grpc.WithInsecure(),
+	// 	grpc.WithBalancerName(roundrobin.Name),
+	// 	//指定初始化round_robin => balancer (后续可以自行定制balancer和 register、resolver 同样的方式)
+	// 	// grpc.WithDefaultServiceConfig(`{"loadBalancingConfig": [{"round_robin":{}}]}`),
+	// 	grpc.WithBlock())
+
 	if err != nil {
 		log.Fatalf("failed to dial: %v", err)
 	}
